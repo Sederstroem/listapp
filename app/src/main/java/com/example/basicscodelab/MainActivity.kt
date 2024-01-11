@@ -365,6 +365,7 @@ fun DisplayAllListsScreen(
                 }
             }
         } else {
+            // TODO need to handle no lists better!!
             // Handle the case where there are no lists
             item {
                 Text(text = "No lists available")
