@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "213807571912",
+    "project_id": "basicscodelab-72f56",
+    "storage_bucket": "basicscodelab-72f56.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:213807571912:android:5a3d22789f1c759ad016fd",
+        "android_client_info": {
+          "package_name": "com.example.basicscodelab"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAH6ysp-DxfGRxakgVHdhcoIDO-jvC6A-4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
