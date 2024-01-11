@@ -87,6 +87,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+// TODO make this composable more modular so i can reuse it throughout my project
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "SuspiciousIndentation")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
