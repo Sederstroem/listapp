@@ -80,6 +80,9 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(route = "display_all_lists_screen") {
                             DisplayAllListsScreen(listViewModel, navController)
+
+
+
                         }
                     }
                 }
