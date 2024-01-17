@@ -1,4 +1,4 @@
-package com.example.basicscodelab
+package com.example.basicscodelab.data
 
 data class ListOfItems(
     val listName: String? = null,

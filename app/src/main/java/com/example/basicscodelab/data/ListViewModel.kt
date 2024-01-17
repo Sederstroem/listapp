@@ -1,11 +1,7 @@
-package com.example.basicscodelab
+package com.example.basicscodelab.data
 
 import android.content.ContentValues.TAG
 import android.util.Log
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -16,17 +12,11 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import java.util.concurrent.Flow
 
 class ListViewModel : ViewModel() {
     private val rootRef: DatabaseReference = Firebase
         .database("https://basicscodelab-72f56-default-rtdb.europe-west1.firebasedatabase.app/")
         .getReference("lists")
-
-    // LiveData or State to observe changes in the list data
-//    private val _listData = mutableStateOf(emptyList<ListItem>())
-//    val listData: State<List<ListItem>> get() = _listData
 
     // LiveData to observe changes in the list data
     private val _listData = MutableStateFlow<List<ListItem>>(emptyList())
@@ -61,7 +51,6 @@ class ListViewModel : ViewModel() {
         val newItemKey = listRef.push()
         newItemKey.setValue(item)
     }
-
     // Need to change return type of this method to Flow or
     // LiveData to update it in when the composable that uses the function recomposes.
     fun getListItems(listName: String) {
@@ -73,9 +62,9 @@ class ListViewModel : ViewModel() {
                     for (childSnapshot in snapshot.children) {
                         val itemName = childSnapshot.child("itemName").value as String
                         val isCheckedValue = childSnapshot.child("isChecked").value
-                        val isChecked = isCheckedValue as? Boolean ?: false
+//                        val isChecked = isCheckedValue as? Boolean ?: false
 
-                        val listItem = ListItem(itemName = itemName, isChecked)
+                        val listItem = ListItem(itemName = itemName)
                         itemList.add(listItem)
                     }
 
@@ -113,14 +102,13 @@ class ListViewModel : ViewModel() {
             }
         })
     }
-
-
     fun updateItemCheckedStatus(
-        listName: String, item: ListItem ) {
+        listName: String, item: ListItem
+    ) {
         rootRef.child(listName)
             .orderByChild("itemName")
             .equalTo(item.itemName)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
+            .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     for (childSnapshot in snapshot.children) {
                         childSnapshot.ref.child("isChecked").setValue(!item.isChecked!!)

@@ -62,8 +62,14 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+
+    // Firebase for database and authentication
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-database:20.3.0")
+    implementation("com.google.firebase:firebase-auth:22.3.0")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+
+
     implementation("androidx.navigation:navigation-runtime-ktx:2.7.6")
     implementation("androidx.navigation:navigation-compose:2.7.6")
     testImplementation("junit:junit:4.13.2")

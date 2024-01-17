@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "213807571912",
+    "firebase_url": "https://basicscodelab-72f56-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "basicscodelab-72f56",
+    "storage_bucket": "basicscodelab-72f56.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:213807571912:android:5a3d22789f1c759ad016fd",
+        "android_client_info": {
+          "package_name": "com.example.basicscodelab"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "213807571912-m3qntir03j8bfic6d0s8a39o87rcf42g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.basicscodelab",
+            "certificate_hash": "4031e4d121a07c179a3ab32d30a555d91f6f51c0"
+          }
+        },
+        {
+          "client_id": "213807571912-4v5inmhdi2r7udch39ihvvs97jnfemin.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAH6ysp-DxfGRxakgVHdhcoIDO-jvC6A-4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "213807571912-4v5inmhdi2r7udch39ihvvs97jnfemin.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,4 +1,4 @@
-package com.example.basicscodelab
+package com.example.basicscodelab.data
 
 data class ListItem(
     var itemName: String? = null,

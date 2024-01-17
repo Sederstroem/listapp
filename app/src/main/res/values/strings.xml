@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">BasicsCodelab</string>
+    <string name="web_client_id">
+        213807571912-4v5inmhdi2r7udch39ihvvs97jnfemin.apps.googleusercontent.com
+    </string>
+    <string name="web_client_id_second_one">
+        840611169908-006f2kcbmcdm9fsnlh8oam3ak73pk26e.apps.googleusercontent.com
+    </string>
 </resources>

@@ -12,6 +12,14 @@
 #   public *;
 #}
 
+
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Only for cases where i have a website that need to be in sync with the app
+#-if class androidx.credentials.CredentialManager
+#    -keep class androidx.credentials.playservices.** { *; }
+
+
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
 #-keepattributes SourceFile,LineNumberTable

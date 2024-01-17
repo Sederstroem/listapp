@@ -2,10 +2,15 @@ package com.example.basicscodelab
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -39,6 +45,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,48 +57,129 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.basicscodelab.data.ListItem
+import com.example.basicscodelab.data.ListViewModel
+import com.example.basicscodelab.presentation.SignInScreen
+import com.example.basicscodelab.sign_in.SignInViewModel
+import com.example.basicscodelab.sign_in.UserData
+import com.example.basicscodelab.sign_in.auth.Authentication
+import com.example.basicscodelab.sign_in.auth.GoogleAuthClient
 import com.example.basicscodelab.ui.theme.BasicsCodelabTheme
+import com.google.android.gms.auth.api.identity.Identity
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
+    private val authentication by lazy {
+        GoogleAuthClient(
+            context = applicationContext,
+            oneTapClient = Identity.getSignInClient(applicationContext)
+        )
+    }
     private val listViewModel: ListViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             BasicsCodelabTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    NavHost(navController, startDestination = "main") {
-                        composable(route = "main") {
-                            ScaffoldUI(listViewModel, navController)
+                    NavHost(navController = navController, startDestination = "sign_in") {
+                        composable("sign_in") {
+                            val signInViewModel = viewModel<SignInViewModel>()
+                            val state by signInViewModel.state.collectAsStateWithLifecycle()
+
+                            // Check if the user is logged in and navigate in that case
+                            LaunchedEffect(key1 = Unit) {
+                                if(authentication.getSignedInUser() != null) {
+                                    navController.navigate("lists_screen")
+                                }
+                            }
+
+                            val launcher = rememberLauncherForActivityResult(
+                                contract = ActivityResultContracts.StartIntentSenderForResult(),
+                                onResult = { result ->
+                                    if(result.resultCode == RESULT_OK) {
+                                        lifecycleScope.launch {
+                                            val signInResult = authentication.signInWithIntent(
+                                                intent = result.data ?: return@launch
+                                            )
+                                            signInViewModel.onSignInResult(signInResult)
+                                        }
+                                    } else {
+                                        Toast.makeText(
+                                            applicationContext,
+                                            "Sign in failed",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                }
+                            )
+                            LaunchedEffect(key1 = state.isSignInSuccessful) {
+                                if(state.isSignInSuccessful) {
+                                    Toast.makeText(
+                                        applicationContext,
+                                        "Sign in successful",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+//                                    val intent = Intent(this@MainActivity, ListActivity::class.java)
+//                                    startActivity(intent)
+
+                                    // TODO direct the user to their list screen
+                                    navController.navigate("lists_screen")
+//                                    signInViewModel.resetState()
+                                }
+                            }
+                            // TODO Implement the sign in screen composable here.
+                            SignInScreen(
+                                state,
+                                onGoogleSignInClick = {
+                                    lifecycleScope.launch {
+                                        val signInIntentSender = authentication.signIn()
+                                        launcher.launch(
+                                            IntentSenderRequest.Builder(
+                                                signInIntentSender ?: return@launch
+                                            ).build()
+                                        )
+                                    }
+                                })
                         }
-                        composable(route = "add_item_screen/{listName}") {backStackEntry ->
-                            val arguments = requireNotNull(backStackEntry.arguments)
-                            val listName = arguments.getString("listName") ?: error("List name not provided")
-                            AddItemScreen(listName, listViewModel, navController)
-                        }
-                        composable(route = "display_all_lists_screen") {
+                        // TODO direct the user to their list screen if they are signed in
+                        composable("lists_screen") {
+                            val signedInUser = authentication.getSignedInUser()
+                            // TODO Use the signedInUser to get the lists of that specific user
+//                            if (signedInUser != null) {
+//                                DisplayAllListsScreen(listViewModel, navController, signedInUser)
+//                            }
                             DisplayAllListsScreen(listViewModel, navController)
 
-
-
+//                            ScaffoldUI(listViewModel, navController)
                         }
+                        // TODO navigate to the specific item screen
+                        composable("add_item_screen/{listName}") { backStackEntry ->
+                            val listName = backStackEntry.arguments?.getString("listName")
+                            if (listName != null) {
+                                AddItemScreen(listName, listViewModel, navController)
+                            }
+                        }
+
                     }
+
                 }
             }
         }
     }
 }
-
 // TODO make this composable more modular so i can reuse it throughout my project
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "SuspiciousIndentation")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,16 +194,19 @@ fun ScaffoldUI(
     Scaffold(
         modifier = Modifier.padding(bottom = 40.dp),
         topBar = {
-            Row (
+            Row(
                 modifier = Modifier
                     .padding(vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 TopAppBar(
                     title = { Text("Welcome") },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back"
+                            )
                         }
                     },
                     actions = {
@@ -148,14 +240,22 @@ fun ScaffoldUI(
             ) { Text("New List") }
         }
     ) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 80.dp)) {
-            Column {
-                Button(onClick = { navController.navigate("display_all_lists_screen") }) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 80.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .wrapContentHeight(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Button(onClick = { navController.navigate("lists_screen") }
+                ) {
                     Text(text = "View Your Lists")
                 }
-
             }
         }
     }
@@ -182,12 +282,11 @@ fun ScaffoldUI(
             confirmButton = {
                 Button(
                     onClick = {
-                            // Create the list and dismiss the dialog
-                            listViewModel.createNewList(listName)
-                            showDialog.value = false
-                            navController.navigate("add_item_screen/${listName}")
-                            listName = ""
-
+                        // Create the list and dismiss the dialog
+                        listViewModel.createNewList(listName)
+                        showDialog.value = false
+                        navController.navigate("add_item_screen/${listName}")
+                        listName = ""
                     },
                     enabled = listName.isNotEmpty()
                 ) {
@@ -207,12 +306,10 @@ fun AddItemScreen(
     listViewModel: ListViewModel,
     navController: NavController
 ) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+
     var itemName by remember { mutableStateOf("") }
     val showDialog = remember { mutableStateOf(false) }
-
-//    // Collect the result of getListItems into listItems state
-//    val listItems by rememberUpdatedState(
-//        newValue = listViewModel.getListItems(listName))
     val listItems by listViewModel.listData.collectAsStateWithLifecycle()
 
     LaunchedEffect(key1 = true) {
@@ -221,16 +318,19 @@ fun AddItemScreen(
     Scaffold(
         modifier = Modifier.padding(bottom = 40.dp),
         topBar = {
-            Row (
+            Row(
                 modifier = Modifier
                     .padding(vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 TopAppBar(
                     title = { Text(listName) },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back"
+                            )
                         }
                     },
                     actions = {
@@ -241,7 +341,8 @@ fun AddItemScreen(
                         ) {
                             Icon(Icons.Default.Settings, contentDescription = "Settings")
                         }
-                    }
+                    },
+                    scrollBehavior = scrollBehavior
                 )
             }
         },
@@ -264,34 +365,34 @@ fun AddItemScreen(
             ) { Text("Add Item") }
         }
     ) {
-            // Display all items in the list
-            LazyColumn (
-                modifier = Modifier
-                    .padding(top = 80.dp)
-            ) {
-                items(items = listItems) { listItem ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(vertical = 4.dp)
-                    ) {
-                        listItem.isChecked?.let {
-                            Checkbox(
-                                checked = listItem.isChecked!!,
-                                onCheckedChange = {
-                                    listViewModel
-                                        .updateItemCheckedStatus(
-                                            listName, listItem
-                                        )
-                                }
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        listItem.itemName?.let { Text(text = it) }
+        // Display all items in the list
+        LazyColumn(
+            modifier = Modifier
+                .padding(top = 80.dp)
+        ) {
+            items(items = listItems) { listItem ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(vertical = 4.dp)
+                ) {
+                    listItem.isChecked?.let {
+                        Checkbox(
+                            checked = listItem.isChecked!!,
+                            onCheckedChange = {
+                                listViewModel
+                                    .updateItemCheckedStatus(
+                                        listName, listItem
+                                    )
+                            }
+                        )
                     }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    listItem.itemName?.let { Text(text = it) }
                 }
             }
+        }
     }
     // Dialog for entering the list name
     if (showDialog.value) {
@@ -318,7 +419,7 @@ fun AddItemScreen(
                     onClick = {
                         listViewModel.addItemToList(
                             listName,
-                            ListItem(itemName, isChecked = false)
+                            ListItem(itemName)
                         )
                         showDialog.value = false
                         itemName = ""
@@ -338,6 +439,11 @@ fun DisplayAllListsScreen(
     navController: NavController
 ) {
     val listItems by listViewModel.listData.collectAsStateWithLifecycle()
+    // ,
+    //    user: UserData
+//    Box {
+//        Text(text = "${user.username}")
+//    }
 
     // Observe changes in listData and recompose when it changes
     LaunchedEffect(listItems) {
@@ -357,7 +463,7 @@ fun DisplayAllListsScreen(
                     },
                     modifier = Modifier
                         .padding(8.dp)
-                        .size(40.dp)
+                        .size(30.dp)
                         .background(color = MaterialTheme.colorScheme.primary),
                     shape = CircleShape,
                     elevation = ButtonDefaults.buttonElevation(
@@ -365,8 +471,10 @@ fun DisplayAllListsScreen(
                         pressedElevation = (-2).dp
                     )
                 ) {
-                    Text(text = listItem.itemName ?: "",
-                        color = MaterialTheme.colorScheme.onPrimary)
+                    Text(
+                        text = listItem.itemName ?: "",
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
                 }
             }
         } else {
