@@ -6,6 +6,7 @@ import android.content.IntentSender
 import android.util.Log
 import android.widget.Toast
 import com.example.basicscodelab.R
+import com.example.basicscodelab.data.ListViewModel
 import com.example.basicscodelab.sign_in.SignInResult
 import com.example.basicscodelab.sign_in.UserData
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
@@ -20,7 +21,8 @@ import java.util.concurrent.CancellationException
 
 class GoogleAuthClient(
     private val context: Context,
-    private val oneTapClient: SignInClient) : Authentication {
+    private val oneTapClient: SignInClient,
+    private val listViewModel: ListViewModel) : Authentication {
     private val auth = Firebase.auth
 
     @Override
@@ -51,7 +53,12 @@ class GoogleAuthClient(
             val user = auth.signInWithCredential(googleCredentials).await().user
             if (user != null) {
                 Log.d("Login Success", "User ID: ${user.uid}, Timestamp: ${System.currentTimeMillis()}")
-                // rest of the code
+                // Attempting to add the user to the database upon successful login:
+                listViewModel.handleUserLogin(UserData(
+                    userId = user.uid,
+                    userName = user.displayName,
+                    profilePictureUrl = user.photoUrl?.toString()
+                ))
             } else {
                 Log.e("Login Failure", "User is null")
                 // handle failure or return an appropriate result
@@ -60,7 +67,7 @@ class GoogleAuthClient(
                 data = user?.run {
                     UserData(
                         userId = uid,
-                        username = displayName,
+                        userName = displayName,
                         profilePictureUrl = photoUrl?.toString()
                     )
                 },
@@ -92,7 +99,7 @@ class GoogleAuthClient(
     override fun getSignedInUser(): UserData? = auth.currentUser?.run {
         UserData(
             userId = uid,
-            username = displayName,
+            userName = displayName,
             profilePictureUrl = photoUrl?.toString()
         )
     }
